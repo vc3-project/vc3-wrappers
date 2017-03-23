@@ -9,7 +9,7 @@ import json
 import subprocess
 from multiprocessing import Process
 
-from infoclient_wrapper import ExecWrapper
+from vc3.infoclient_wrapper import ExecWrapper
 
 class CCLCatalogServer(ExecWrapper):
   def __init__(self, executable = 'catalog_server'):
@@ -58,7 +58,7 @@ class CCLCatalogServer(ExecWrapper):
 
     # send hostname and port of this catalog to the infoservice
     self.port = self.__read_portfile()
-    report = { self.options.cluster : { 'cctools-catalog' : { 'hostname' : self.hostname, 'port' : self.port } } }
+    report = { self.options.cluster : { 'cctools-catalog-server' : { 'hostname' : self.hostname, 'port' : self.port } } }
     pretty = json.dumps(report, indent=4, sort_keys=True)
     self.infoclient.mergedocument('runtime', pretty)
 
