@@ -2,6 +2,7 @@
 
 __version__ = '0.0.1'
 
+import json
 import socket
 import sys
 
@@ -66,12 +67,22 @@ class ExecWrapper(object):
                 self.log.error('Config failure')
                 sys.exit(1)
 
+    def get_runtime_info(self):
+        runts = self.infoclient.getdocument('runtime')
+        runtd = json.loads(runts)
+
+        if runtd and self.options.cluster in runtd:
+            return runtd[self.options.cluster]
+
+        return None
+
     def preamble(self):
         # Intent: Read from the infoservice configuration for execute.
         pass
 
     def epilogue(self):
         # Intent: Remove from infoservice runtime information when execution ends.
+        # Bug: Should be called at any exit (signals, etc.).
         pass
 
     def execute(self):

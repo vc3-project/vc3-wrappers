@@ -26,9 +26,6 @@ class CCLCatalogServer(ExecWrapper):
       sys.stderr.write('No port file was specified with --port-file\n')
       sys.exit(1)
 
-    print self.options.portFile
-
-
   def execute(self):
     def run_catalog():
       cmd = [ self.executable, '-Z', self.options.portFile ]

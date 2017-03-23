@@ -1,0 +1,51 @@
+#!/usr/bin/env python
+
+import os
+import sys
+import time
+import json
+
+import subprocess
+from multiprocessing import Process
+
+from vc3.infoclient_wrapper import ExecWrapper
+
+class Makeflow(ExecWrapper):
+  def __init__(self, executable = 'makeflow'):
+    super(Makeflow, self).__init__(executable)
+
+    self.catalog_host = None
+    self.catalog_port = None
+
+  def execute(self):
+    def run_makeflow():
+      cmd = [ self.executable, '--catalog', self.catalog_host + ':' + self.catalog_port ]
+      cmd.extend(self.args)
+      try:
+        subprocess.check_call(cmd)
+      except subprocess.CalledProcessError, ex:
+        return ex.returncode
+
+    p = Process(target = run_makeflow)
+    p.start()
+    p.join()
+
+
+  def preamble(self):
+    cluster_info = self.get_runtime_info()
+
+    if not cluster_info:
+      sys.stderr.write('Could not runtime information from infoservice.\n')
+      sys.exit(1)
+
+    try:
+      self.catalog_host = cluster_info['cctools-catalog-server']['hostname']
+      self.catalog_port = cluster_info['cctools-catalog-server']['port']
+    except KeyError:
+      sys.write('Could not obtain catalog information from infoservice.')
+      sys.exit(1)
+
+if __name__ == '__main__':
+  ex = Makeflow()
+  ex.run()
+
