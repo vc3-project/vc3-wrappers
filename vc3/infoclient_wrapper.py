@@ -3,6 +3,7 @@
 __version__ = '0.0.1'
 
 import json
+import os
 import socket
 import sys
 
@@ -15,12 +16,22 @@ class ExecWrapper(object):
     def __init__(self, executable):
         self.executable = executable
 
+
+        cluster_default = None
+        if 'VC3_REQUEST_NAME' in os.environ:
+            cluster_default = os.environ['VC3_REQUEST_NAME']
+
+        conf_default = '/etc/vc3/core.conf'
+        if 'VC3_REQUEST_MAIN_CONF' in os.environ:
+            conf_default = os.environ['VC3_REQUEST_MAIN_CONF']
+
         self.parser = OptionParser(usage='''%prog [WRAPPER-OPTIONS] -- [%prog OPTIONS]''', version='0.0.1')
         self.parser.add_option("--cluster",dest="cluster",
                 action="store",
+                default=cluster_default,
                 help='Indicate to which cluster %prog should report its port.')
         self.parser.add_option("--conf", dest="confFiles", 
-                default="/etc/vc3/vc3-core.conf",
+                default=conf_default,
                 action="store", 
                 metavar="FILE1[,FILE2,FILE3]", 
                 help="Load configuration from FILEs (comma separated list)")
