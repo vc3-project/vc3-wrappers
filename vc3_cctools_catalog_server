@@ -1,0 +1,81 @@
+#!/usr/bin/env python
+
+import os
+import sys
+import time
+
+import json
+
+import subprocess
+from multiprocessing import Process
+
+from infoclient_wrapper import ExecWrapper
+
+class CCLCatalogServer(ExecWrapper):
+  def __init__(self, executable = 'catalog_server'):
+    super(CCLCatalogServer, self).__init__(executable)
+
+  def parseopts(self):
+    self.parser.add_option("--port-file", dest="portFile", 
+        action="store", 
+        help="File to write the port number %prog is listening to.")
+
+    super(CCLCatalogServer, self).parseopts()
+
+    if not self.options.portFile:
+      sys.stderr.write('No port file was specified with --port-file\n')
+      sys.exit(1)
+
+    print self.options.portFile
+
+
+  def execute(self):
+    def run_catalog():
+      cmd = [ self.executable, '-Z', self.options.portFile ]
+      cmd.extend(self.args)
+      try:
+        subprocess.check_call(cmd)
+      except subprocess.CalledProcessError, ex:
+        return ex.returncode
+
+    try:
+      if os.path.exists(self.options.portFile):
+        os.remove(self.options.portFile)
+    except OSError, e:
+      sys.stderr.write("Could not remove '%s': %s" % (str(e),))
+      sys.exit(2)
+
+    p = Process(target = run_catalog)
+    p.start()
+
+    # wait for port file to be created
+    while not os.path.exists(self.options.portFile) and p.is_alive():
+      time.sleep(1)
+
+    if not p.is_alive():
+      sys.stderr.write('catalog_server died')
+      sys.exit(3)
+
+    # send hostname and port of this catalog to the infoservice
+    self.port = self.__read_portfile()
+    report = { self.options.cluster : { 'cctools-catalog' : { 'hostname' : self.hostname, 'port' : self.port } } }
+    pretty = json.dumps(report, indent=4, sort_keys=True)
+    self.infoclient.mergedocument('runtime', pretty)
+
+    # wait for the catalog to finish
+    p.join()
+
+  def __read_portfile(self):
+    with open(self.options.portFile, 'r') as f:
+      port = f.readline()
+      port = port.strip()
+      return port
+
+  def epilogue(self):
+    # eventually, remove catalog information from infoservice
+    pass
+
+if __name__ == '__main__':
+  ex = CCLCatalogServer()
+  ex.run()
+
