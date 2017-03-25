@@ -29,12 +29,17 @@ class ExecWrapper(object):
         self.parser.add_option("--cluster",dest="cluster",
                 action="store",
                 default=cluster_default,
-                help='Indicate to which cluster %prog should report its port.')
+                help='Indicate the name of the cluster %prog should work for.')
+
+        default_conf = "~/etc/vc3/vc3-infoclient.conf"
+        if 'VC3_SERVICES_HOME' in os.environ:
+            default_conf = os.path.join(os.environ['VC3_SERVICES_HOME'], 'etc', 'vc3-infoclient.conf') + ',' + default_conf
         self.parser.add_option("--conf", dest="confFiles", 
-                default=conf_default,
-                action="store", 
-                metavar="FILE1[,FILE2,FILE3]", 
-                help="Load configuration from FILEs (comma separated list)")
+                          default=default_conf,
+                          action="store", 
+                          metavar="FILE1[,FILE2,FILE3]", 
+                          help="Load configuration from FILEs (comma separated list)")
+
         self.parser.add_option("--executable", dest="exec", 
                 default=self.executable,
                 action="store", 
