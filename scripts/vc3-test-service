@@ -39,7 +39,7 @@ class TestWrapper(ExecWrapper):
       sys.exit(1)
 
     try:
-      self.message = requestid_info['services']['test-service']['message']
+      self.message = requestid_info['services']['vc3-test-service']['message']
     except KeyError:
       sys.stderr.write('Could not obtain message to print from infoservice.\n')
       sys.exit(1)
@@ -47,7 +47,7 @@ class TestWrapper(ExecWrapper):
   def write_to_infoservice(self, outmessage):
     report = { 'runtime' : {
       self.options.requestid : {
-        'test-service' : {
+        'vc3-test-service' : {
           'message' : str(self.counter) + ':' + str(outmessage) } } } }
 
     pretty = json.dumps(report, indent=4, sort_keys=True)
