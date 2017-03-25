@@ -32,15 +32,15 @@ class Makeflow(ExecWrapper):
 
 
   def preamble(self):
-    cluster_info = self.get_runtime_info()
+    requestid_info = self.get_runtime_info()
 
-    if not cluster_info:
+    if not requestid_info:
       sys.stderr.write('Could not runtime information from infoservice.\n')
       sys.exit(1)
 
     try:
-      self.catalog_host = cluster_info['cctools-catalog-server']['hostname']
-      self.catalog_port = cluster_info['cctools-catalog-server']['port']
+      self.catalog_host = requestid_info['cctools-catalog-server']['hostname']
+      self.catalog_port = requestid_info['cctools-catalog-server']['port']
     except KeyError:
       sys.write('Could not obtain catalog information from infoservice.')
       sys.exit(1)

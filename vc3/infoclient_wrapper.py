@@ -16,20 +16,12 @@ class ExecWrapper(object):
     def __init__(self, executable):
         self.executable = executable
 
-
-        cluster_default = None
-        if 'VC3_REQUEST_NAME' in os.environ:
-            cluster_default = os.environ['VC3_REQUEST_NAME']
-
-        conf_default = '/etc/vc3/core.conf'
-        if 'VC3_REQUEST_MAIN_CONF' in os.environ:
-            conf_default = os.environ['VC3_REQUEST_MAIN_CONF']
-
         self.parser = OptionParser(usage='''%prog [WRAPPER-OPTIONS] -- [%prog OPTIONS]''', version='0.0.1')
-        self.parser.add_option("--cluster",dest="cluster",
+
+        self.parser.add_option("--requestid",dest="requestid",
                 action="store",
-                default=cluster_default,
-                help='Indicate the name of the cluster %prog should work for.')
+                default=None,
+                help='Indicate the name of the requestid %prog should work for.')
 
         default_conf = "~/etc/vc3/vc3-infoclient.conf"
         if 'VC3_SERVICES_HOME' in os.environ:
@@ -47,18 +39,19 @@ class ExecWrapper(object):
 
         self.parseopts()
         self.__createconfig()
+
         self.infoclient = InfoClient(self.config)
-
         self.hostname = self.__my_host_address()
-
         super(ExecWrapper, self).__init__()
 
     def parseopts(self):
         (self.options, self.args) = self.parser.parse_args()
         self.options.confFiles    = self.options.confFiles.split(',')
 
-        if not self.options.cluster:
-            sys.stderr.write('No cluster was specified with --cluster.\n')
+        # ensure this wrapper knows who to work for, give preference to command
+        # line argument.
+        if not self.options.requestid:
+            sys.stderr.write('No requestid was specified with --requestid.\n')
             sys.exit(1)
 
     def __my_host_address(self):
@@ -83,12 +76,13 @@ class ExecWrapper(object):
                 self.log.error('Config failure')
                 sys.exit(1)
 
+
     def get_runtime_info(self):
         runts = self.infoclient.getdocument('runtime')
         runtd = json.loads(runts)
 
-        if runtd and self.options.cluster in runtd:
-            return runtd[self.options.cluster]
+        if runtd and self.options.requestid in runtd:
+            return runtd[self.options.requestid]
 
         return None
 
