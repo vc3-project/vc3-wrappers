@@ -61,6 +61,7 @@ setup(
     scripts = [ # Utilities and main script
                'scripts/vc3-cctools-catalog-server',
                'scripts/vc3-makeflow',
+               'scripts/vc3-test-service',
               ],
     
     data_files = choose_data_files()

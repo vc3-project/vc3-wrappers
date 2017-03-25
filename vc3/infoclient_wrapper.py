@@ -76,14 +76,15 @@ class ExecWrapper(object):
                 self.log.error('Config failure')
                 sys.exit(1)
 
-
-    def get_runtime_info(self):
-        runts = self.infoclient.getdocument('runtime')
+    def getinforequestid(self, key):
+        runts = self.infoclient.getdocument(key)
         runtd = json.loads(runts)
 
-        if runtd and self.options.requestid in runtd:
-            return runtd[self.options.requestid]
-
+        # drop one level
+        if runtd:
+            runtd = runtd[key]
+            if self.options.requestid in runtd:
+                return runtd[self.options.requestid]
         return None
 
     def preamble(self):

@@ -1,0 +1,65 @@
+#!/usr/bin/env python
+
+import os
+import sys
+import time
+import json
+
+import subprocess
+from multiprocessing import Process
+
+from vc3.infoclient_wrapper import ExecWrapper
+
+class TestWrapper(ExecWrapper):
+  def __init__(self, executable = None):
+    super(TestWrapper, self).__init__(executable)
+    self.message = None
+    self.counter = 1
+
+  def execute(self):
+    def run_test():
+      count = 1
+      while True:
+        if self.message:
+          print str(self.counter) + '|' + self.options.requestid + ' told me to say: ' + str(self.message)
+          time.sleep(5)
+        # call preamble to update message
+        self.write_to_infoservice(self.message)
+        self.read_from_infoservice()
+        self.counter += 1
+    p = Process(target = run_test)
+    p.start()
+    p.join()
+
+  def read_from_infoservice(self):
+    requestid_info = self.getinforequestid('request')
+
+    if not requestid_info:
+      sys.stderr.write('Could not obtain information from infoservice.\n')
+      sys.exit(1)
+
+    try:
+      self.message = requestid_info['services']['test-service']['message']
+    except KeyError:
+      sys.stderr.write('Could not obtain message to print from infoservice.\n')
+      sys.exit(1)
+
+  def write_to_infoservice(self, outmessage):
+    report = { 'runtime' : {
+      self.options.requestid : {
+        'test-service' : {
+          'message' : str(self.counter) + ':' + str(outmessage) } } } }
+
+    pretty = json.dumps(report, indent=4, sort_keys=True)
+    self.infoclient.mergedocument('runtime', pretty)
+
+  def preamble(self):
+    self.read_from_infoservice()
+
+  def epilogue(self):
+    self.write_to_infoservice('goodbye!')
+
+if __name__ == '__main__':
+  ex = TestWrapper()
+  ex.run()
+
