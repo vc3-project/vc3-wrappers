@@ -19,7 +19,7 @@ class Makeflow(ExecWrapper):
 
   def execute(self):
     def run_makeflow():
-      cmd = [ self.executable, '--catalog', self.catalog_host + ':' + self.catalog_port, '-Twq', '--project-name', self.requestid  ]
+      cmd = [ self.executable, '--catalog', self.catalog_host + ':' + self.catalog_port, '-Twq', '--project-name', self.options.requestid  ]
       cmd.extend(self.args)
       try:
         subprocess.check_call(cmd)
